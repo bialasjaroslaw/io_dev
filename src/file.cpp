@@ -10,7 +10,7 @@ static std::unordered_map<IO::OpenMode, const char*> MODE_MAP{
 namespace IO{
     File::File(const std::filesystem::path& path, OpenMode mode)
         : _path(path){
-            _ptr = fopen(path.c_str(), MODE_MAP[mode]);
+            _ptr = fopen(path.string().c_str(), MODE_MAP[mode]);
         }
 
         std::string File::read(){
