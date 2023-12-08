@@ -7,6 +7,13 @@ FetchContent_Declare(_project_options URL https://github.com/aminya/project_opti
 FetchContent_MakeAvailable(_project_options)
 include(${_project_options_SOURCE_DIR}/Index.cmake)
 
+FetchContent_Declare(
+	stp
+	GIT_REPOSITORY https://github.com/bialasjaroslaw/stp.git
+	GIT_TAG        df8359facbeaddee20f8f0061e4a3ca7da626dfa
+)
+FetchContent_MakeAvailable(stp)
+
 project(io_dev VERSION 0.2 LANGUAGES CXX)
 option(DEVELOPER_BUILD "Enable developer mode" OFF)
 
@@ -42,4 +49,5 @@ add_library(io_dev
 )
 target_include_directories(io_dev INTERFACE include)
 target_include_directories(io_dev PRIVATE include/io_dev)
+target_link_libraries(io_dev PUBLIC text_processing)
 
