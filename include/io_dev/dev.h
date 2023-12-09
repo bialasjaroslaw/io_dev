@@ -24,7 +24,7 @@ namespace IO{
     constexpr int64_t INVALID = -3;
     class Device{
         public:
-            virtual ~Device() = 0;
+            virtual ~Device() = default;
             virtual bool is_open() const = 0;
             virtual OpenMode mode() const = 0;
             virtual bool close() = 0;
@@ -43,7 +43,7 @@ namespace IO{
                 // Could be an issue if device does not return correct size or returns 0
                 if(sz > 0)
                     data.resize(sz);
-                auto bytes_read = read_bytes(ALL, data.data(), data.size());
+                auto bytes_read = read_bytes(amount, data.data(), data.size());
                 data.resize(bytes_read);
                 return data;
             }

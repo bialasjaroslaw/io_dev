@@ -50,13 +50,17 @@ namespace IO{
         auto sz = available();
         if(buff == nullptr)
             buff = new char[std::min(amount, sz)];
-        auto bytes_read = fread(_ptr, sz, 1, _ptr);
+        auto bytes_read = fread(buff, 1, sz, _ptr);
         _pos += bytes_read;
         return bytes_read;
     }
 
     int64_t File::pos() const{
         return _pos;
+    }
+
+    int64_t File::size() const{
+        return _size;
     }
 
     int64_t File::seek(int64_t offset, SeekMode mode){
@@ -66,6 +70,11 @@ namespace IO{
             return _pos;
         }
         return UNKNOWN;
+    }
+
+    bool File::is_good() const
+    {
+        return _ptr != nullptr;
     }
 
     bool File::is_sequential() const{
