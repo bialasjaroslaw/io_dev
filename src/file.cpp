@@ -6,40 +6,73 @@
 
 static std::unordered_map<IO::OpenMode, const char*> MODE_MAP{
     {IO::OpenMode::Read, "r"},
-    {IO::OpenMode::Write, "w"}
+    {IO::OpenMode::Write, "w"},
+    {IO::OpenMode::ReadBinary, "rb"},
+    {IO::OpenMode::WriteBinary, "wb"}
 };
 
 namespace IO{
     File::File(const std::filesystem::path& path, OpenMode mode)
         : _path(path){
             _ptr = fopen(path.string().c_str(), MODE_MAP[mode]);
-        }
-
-        std::string File::read(){
+            if(_ptr == nullptr)
+                return;
+            // Handle failures
             fseek(_ptr, 0, SEEK_END);
-            auto sz = pos();
-            seek(0);
-            std::string buffer;
-            buffer.resize(sz);
-            auto read = fread(buffer.data(), sz, 1, _ptr);
-            buffer.resize(read);
-            return buffer;
+            _size = ftell(_ptr);
+            fseek(_ptr, 0, SEEK_SET);
+            _mode = mode;
         }
 
-        std::vector<std::string> File::read_lines(){
-            return Text::to_string_vector(Text::split(read(), '\n'));
-        }
+    File::~File(){
+        if(_ptr)
+            fclose(_ptr);
+    }
 
-        int64_t File::pos() const{
-            return ftell(_ptr);
-        }
-        int64_t File::seek(int64_t new_position){
-            if (fseek(_ptr, new_position, SEEK_SET) == 0)
-                return pos();
-            return -1;
-        }
+    bool File::is_open() const{
+        return _ptr != nullptr;
+    }
+    OpenMode File::mode() const{
+        return _mode;
+    }
 
-        bool File::is_sequential() const{
-            return true;
+    bool File::close(){
+        if(!is_open())
+            return false;
+        auto result = fclose(_ptr) == 0;
+        _ptr = nullptr;
+        return result;
+    }
+
+    int64_t File::read_bytes(int64_t amount, char* buff, int64_t buff_size){
+        if(!can_read())
+            return INVALID;
+        auto sz = available();
+        if(buff == nullptr)
+            buff = new char[std::min(amount, sz)];
+        auto bytes_read = fread(_ptr, sz, 1, _ptr);
+        _pos += bytes_read;
+        return bytes_read;
+    }
+
+    int64_t File::pos() const{
+        return _pos;
+    }
+
+    int64_t File::seek(int64_t offset, SeekMode mode){
+        auto new_pos = mode == SeekMode::Jump ? offset : (mode == SeekMode::Skip ? _pos + offset : _size - offset);
+        if (fseek(_ptr, offset, SEEK_SET) == 0){
+            _pos = new_pos;
+            return _pos;
         }
+        return UNKNOWN;
+    }
+
+    bool File::is_sequential() const{
+        return false;
+    }
+
+    std::vector<std::string> File::read_lines(){
+        return Text::to_string_vector(Text::split(read(), '\n'));
+    }
 }
