@@ -52,6 +52,14 @@ if(DEVELOPER_BUILD)
         ENABLE_SANITIZER_MEMORY
     )
 
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(ENABLE_GCC_ANALYZER "ENABLE_GCC_ANALYZER")
+        set(GCC_WARNINGS "GCC_WARNINGS")
+    else()
+        set(ENABLE_GCC_ANALYZER "")
+        set(GCC_WARNINGS "")
+    endif()
+
     include(${_project_options_SOURCE_DIR}/Index.cmake)
     include(${_project_options_SOURCE_DIR}/src/DynamicProjectOptions.cmake)
     project_options(
