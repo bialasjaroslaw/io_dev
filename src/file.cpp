@@ -18,9 +18,15 @@ namespace IO{
             if(_ptr == nullptr)
                 return;
             // Handle failures
-            fseek(_ptr, 0, SEEK_END);
-            _size = ftell(_ptr);
-            fseek(_ptr, 0, SEEK_SET);
+            if(fseek(_ptr, 0, SEEK_END) != 0){
+                return;
+            }
+            auto size = ftell(_ptr);
+            if(fseek(_ptr, 0, SEEK_SET) != 0 || size < 0){
+                return;
+            }
+            _size = size;
+            _pos = 0;
             _mode = mode;
         }
 
@@ -41,35 +47,50 @@ namespace IO{
             return false;
         auto result = fclose(_ptr) == 0;
         _ptr = nullptr;
+        _pos = std::nullopt;
+        _size = std::nullopt;
         return result;
     }
 
-    int64_t File::read_bytes(int64_t amount, char* buff, int64_t buff_size){
-        if(!can_read())
-            return INVALID;
-        auto sz = available();
+    std::optional<uint64_t> File::read_bytes(uint64_t amount, char* buff, uint64_t buff_size){
+        auto available_bytes = available();
+        if(!can_read() || !available_bytes)
+            return std::nullopt;
         if(buff == nullptr)
-            buff = new char[std::min(amount, sz)];
-        auto bytes_read = fread(buff, 1, sz, _ptr);
-        _pos += bytes_read;
+            buff = new char[std::min(amount, available_bytes.value())];
+        auto bytes_read = fread(buff, 1, std::min(buff_size, available_bytes.value()), _ptr);
+        _pos.value() += bytes_read;
         return bytes_read;
     }
 
-    int64_t File::pos() const{
+    std::optional<uint64_t> File::pos() const{
         return _pos;
     }
 
-    int64_t File::size() const{
+    std::optional<uint64_t> File::size() const{
         return _size;
     }
 
-    int64_t File::seek(int64_t offset, SeekMode mode){
-        auto new_pos = mode == SeekMode::Jump ? offset : (mode == SeekMode::Skip ? _pos + offset : _size - offset);
-        if (fseek(_ptr, offset, SEEK_SET) == 0){
+    std::optional<uint64_t> File::seek(uint64_t offset, SeekMode mode){
+        if(!_pos || !_size)
+            return std::nullopt;
+        if(mode == SeekMode::Jump && offset > _size.value())
+            return std::nullopt;
+        if(mode == SeekMode::Skip && (offset > _size.value() || _size.value() - offset < _pos.value()))
+            return std::nullopt;
+        if(mode == SeekMode::End && _size.value() < offset)
+            return std::nullopt;
+
+        auto new_pos = mode == SeekMode::Jump ? offset : 
+                                                    (mode == SeekMode::Skip ? _pos.value() + offset : _size.value() - offset);
+        if (static_cast<uint64_t>(std::numeric_limits<int64_t>::max()) > new_pos)
+            return std::nullopt;
+
+        if (fseek(_ptr, static_cast<int64_t>(new_pos), SEEK_SET) == 0){
             _pos = new_pos;
             return _pos;
         }
-        return UNKNOWN;
+        return std::nullopt;
     }
 
     bool File::is_good() const
@@ -81,7 +102,10 @@ namespace IO{
         return false;
     }
 
-    std::vector<std::string> File::read_lines(){
-        return Text::to_string_vector(Text::split(read(), '\n'));
+    std::optional<std::vector<std::string>> File::read_lines(){
+        auto bytes = read();
+        if(!bytes)
+            return std::nullopt;
+        return Text::to_string_vector(Text::split(bytes.value(), '\n'));
     }
 }
