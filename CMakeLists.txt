@@ -75,8 +75,8 @@ if(DEVELOPER_BUILD)
         ENABLE_STACK_PROTECTION
         ENABLE_OVERFLOW_PROTECTION
         WARNINGS_AS_ERRORS
-        ENABLE_GCC_ANALYZER
-        GCC_WARNINGS
+        ${ENABLE_GCC_ANALYZER}
+        ${GCC_WARNINGS}
     )
 
     target_link_libraries(io_dev INTERFACE 
