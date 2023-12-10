@@ -21,13 +21,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(_project_options)
 
-FetchContent_Declare(
-    fmt
-    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG        f5e54359df4c26b6230fc61d38aa294581393084
-)
-FetchContent_MakeAvailable(fmt)
-
 set(TEXT_PROCESSING_ENABLE_TESTS OFF)
 FetchContent_Declare(
 	stp
@@ -43,7 +36,7 @@ add_library(io_dev
 )
 target_include_directories(io_dev INTERFACE include)
 target_include_directories(io_dev PRIVATE include/io_dev)
-target_link_libraries(io_dev PUBLIC text_processing fmt)
+target_link_libraries(io_dev PUBLIC text_processing)
 
 if(DEVELOPER_BUILD)
     set(ENABLE_CPPCHECK "ENABLE_CPPCHECK")
