@@ -97,7 +97,7 @@ if(IO_DEV_ENABLE_TESTS)
     )
 
     target_link_libraries(main_test PRIVATE io_dev gtest_main)
-    target_link_libraries(main_test PRIVATE 
+    target_link_libraries(main_test INTERFACE 
         ${PROJECT_NAME}_project_options 
         ${PROJECT_NAME}_project_warnings
     )
