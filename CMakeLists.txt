@@ -71,7 +71,7 @@ if(DEVELOPER_BUILD)
         GCC_WARNINGS
     )
 
-    target_link_libraries(io_dev PRIVATE 
+    target_link_libraries(io_dev INTERFACE 
         ${PROJECT_NAME}_project_options 
         ${PROJECT_NAME}_project_warnings
     )
