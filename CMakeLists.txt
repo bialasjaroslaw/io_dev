@@ -15,12 +15,6 @@ set(CMAKE_C_STANDARD 90)
 
 include(FetchContent)
 
-FetchContent_Declare(
-    _project_options
-    URL https://github.com/aminya/project_options/archive/refs/tags/v0.33.0.zip
-)
-FetchContent_MakeAvailable(_project_options)
-
 set(TEXT_PROCESSING_ENABLE_TESTS OFF)
 FetchContent_Declare(
 	stp
@@ -39,6 +33,14 @@ target_include_directories(io_dev PRIVATE include/io_dev)
 target_link_libraries(io_dev PUBLIC text_processing)
 
 if(DEVELOPER_BUILD)
+    include(FetchContent)
+    FetchContent_Declare(
+        _project_options
+        URL https://github.com/aminya/project_options/archive/refs/tags/v0.33.0.zip
+    )
+    FetchContent_MakeAvailable(_project_options)
+    include(${_project_options_SOURCE_DIR}/Index.cmake)
+
     set(ENABLE_CPPCHECK "ENABLE_CPPCHECK")
     if(NOT CXX_CPPCHECK)
         set(ENABLE_CPPCHECK "")
@@ -78,8 +80,6 @@ if(DEVELOPER_BUILD)
         set(ENABLE_SANITIZER_THREAD "")
         set(ENABLE_SANITIZER_MEMORY "")
     endif()
-
-    include(${_project_options_SOURCE_DIR}/Index.cmake)
     include(${_project_options_SOURCE_DIR}/src/DynamicProjectOptions.cmake)
     project_options(
         PREFIX ${PROJECT_NAME}
@@ -124,10 +124,6 @@ if(IO_DEV_ENABLE_TESTS)
     )
 
     target_link_libraries(main_test PRIVATE io_dev gtest_main)
-    target_link_libraries(main_test INTERFACE 
-        ${PROJECT_NAME}_project_options 
-        ${PROJECT_NAME}_project_warnings
-    )
     gtest_discover_tests(main_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/data)
     
 endif()
