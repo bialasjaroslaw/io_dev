@@ -25,7 +25,7 @@ set(TEXT_PROCESSING_ENABLE_TESTS OFF)
 FetchContent_Declare(
 	stp
 	GIT_REPOSITORY https://github.com/bialasjaroslaw/stp.git
-	GIT_TAG        df8359facbeaddee20f8f0061e4a3ca7da626dfa
+	GIT_TAG        238e98eec75786570466f13c5f0a5b1b42fb6648
 )
 FetchContent_MakeAvailable(stp)
 
