@@ -13,15 +13,23 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 90)
 
-include(FetchContent)
-
-set(TEXT_PROCESSING_ENABLE_TESTS OFF)
-FetchContent_Declare(
-	stp
-	GIT_REPOSITORY https://github.com/bialasjaroslaw/stp.git
-	GIT_TAG        aef0329b3cd8aa7dc52ba838d15221b515a91ff8
+include(Packages.cmake)
+add_dependency(
+    NAME googletest
+    PACKAGE GTest
+    URL https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip
 )
-FetchContent_MakeAvailable(stp)
+add_dependency(
+    NAME _project_options 
+    URL https://github.com/aminya/project_options/archive/refs/tags/v0.33.0.zip
+)
+set(TEXT_PROCESSING_ENABLE_TESTS OFF)
+add_dependency(
+    NAME stp 
+    REPO https://github.com/bialasjaroslaw/stp.git
+    HASH aef0329b3cd8aa7dc52ba838d15221b515a91ff8
+)
+use_dependency(stp)
 
 add_library(io_dev 
     include/io_dev/dev.h
@@ -33,12 +41,8 @@ target_include_directories(io_dev PRIVATE include/io_dev)
 target_link_libraries(io_dev PUBLIC text_processing)
 
 if(DEVELOPER_BUILD)
-    include(FetchContent)
-    FetchContent_Declare(
-        _project_options
-        URL https://github.com/aminya/project_options/archive/refs/tags/v0.33.0.zip
-    )
-    FetchContent_MakeAvailable(_project_options)
+    use_dependency(_project_options)
+
     include(${_project_options_SOURCE_DIR}/Index.cmake)
 
     set(ENABLE_CPPCHECK "ENABLE_CPPCHECK")
@@ -63,7 +67,7 @@ if(DEVELOPER_BUILD)
         set(ENABLE_OVERFLOW_PROTECTION "ENABLE_OVERFLOW_PROTECTION")
         set(WARNINGS_AS_ERRORS "WARNINGS_AS_ERRORS")
 
-        target_compile_definitions(text_processing INTERFACE 
+        target_compile_definitions(io_dev INTERFACE 
             _GLIBCXX_CONCEPT_CHECKS 
             _GLIBCXX_ASSERTIONS 
             _GLIBCXX_DEBUG 
@@ -105,25 +109,19 @@ if(DEVELOPER_BUILD)
 endif()
 
 if(IO_DEV_ENABLE_TESTS)
-    include(FetchContent)
     include(CTest)
     include(GoogleTest)
 
     enable_testing()
-    FetchContent_Declare(
-    	googletest
-    	GIT_REPOSITORY https://github.com/google/googletest.git
-    	GIT_TAG        58d77fa8070e8cec2dc1ed015d66b454c8d78850 # release-1.12.1
-    )
     # For Windows: Prevent overriding the parent project's compiler/linker settings
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(googletest)
+    use_dependency(GTest)
 
     add_executable(main_test 
 	   tests/test_file.cpp
     )
 
-    target_link_libraries(main_test PRIVATE io_dev gtest_main)
+    target_link_libraries(main_test PRIVATE io_dev GTest::gtest_main GTest::gmock)
     gtest_discover_tests(main_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/data)
     
 endif()
